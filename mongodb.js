@@ -44,7 +44,7 @@ app.get('/patient/:patientId',function(req,res) {
             if(err)
                 res.send(err);
             if(!e)      // If entry with requested eventId doesn't exist, print error message that it doesn't exist
-                res.send("Entry doesnt exist");
+                res.send("Entry doesn't exist");
             else
             
             {res.send(
@@ -52,7 +52,7 @@ app.get('/patient/:patientId',function(req,res) {
             "Patient name: " + e.name + "<br>\n" +
             "Age: "+ e.age + "<br>\n" +
             "Amount of sports required: "+ e.reqsport + "<br>\n" +
-            "Amount of sports Completed: " + e.finsport + "<br>\n")}
+            "Amount of sports completed: " + e.finsport + "<br>\n")}
 
             
         }
@@ -66,103 +66,75 @@ app.post('/patient', function(req,res){
     // Find whether there are any events, if no events-> eventid = 0 , or else eventid = max+1
 
     // find all
-    Event.find( {} , 'patientId -_id', function(err, events){
+    Patient.find( {} , 'patientId -_id', function(err, patients){
         if(err) return next(err);
 
-        var eventid = 0
+        var patientid = 0
         if(patients.length < 1) { // if length 0, contains nothing
             patientid = 0;
         }
         else {
-            // if length >=1 , get the max and add by 1
-            var array = [];
-            for(let num of patients){
-                array.push(num.patientId);
-            }
-            // var tempMaxId = Math.max(...array);
-            // eventid = tempMaxId + 1;
-            patientid = Math.max.apply(null,array) + 1; // finding maximum event
-        }
+             // if not, then you can create event and save it(store it to database)
+            var e = new Patient({
+                patientId: req.body['patientid'],
+                name: req.body['name'],
+                age: req.body['age'],
+                reqsport: req.body['reqsport'],
+                finsport: req.body['finsport']
+            });
 
-        // We can get name immediately from the req.body
-        // location and event quota is related to one another
-        // find the loc from locId,
-        Location.findOne( {locId : req.body['locId']}, function(err, result){
-            if(err) console.log(err);
+                e.save(function(err){
+                    if(err)
+                        res.send(err);
 
-            // if not found, say no such location found
-            if(!result)
-                res.send("Your requested location does not exist");
-            else {
-                // if location is found, then check validity, ( whether result.quota <= event_quota)
-                if(result.quota < req.body['quota'] ){
-                    //if location quota < requested event quota, send response that event can't be created
-                    res.send("Such event can't be created: Event quota exceed location quota!");
-                }
-                else {
-                    // if not, then you can create event and save it(store it to database)
-                    var e = new Event({
-                        eventId: eventid,
-                        name: req.body['name'],
-                        loc: result._id,
-                        quota: req.body['quota']
-                    });
-
-                    e.save(function(err){
-                        if(err)
-                            res.send(err);
-
-                        // use e.loc to findbyId
-                        Location.findById(e.loc, function(err,location)
-                        {res.status(201).send("Succesfully Created an event:"+"<br>\n" +
-                            "Event ID: " + e.eventId + "<br>\n" +
-                            "Event Name: " + e.name + "<br>\n" +
-                            "Location ID: " + location.locId + "<br>\n" +
-                            "Location Name: " + location.name + "<br>\n" +
-                            "Event Quota: " + e.quota +"<br>\n"
+                    else{
+                      
+                        {res.status(201).send("Succesfully input patient:"+"<br>\n" +
+                            "Patient ID: " + e.patientId+ "<br>\n" +
+                            "Patient Name: " + e.name + "<br>\n" +
+                            "Age: " + e.age + "<br>\n" +
+                            "Amount of sports required: " + e.reqsport + "<br>\n" +
+                            "Amount of sports completed: " + e.finsport +"<br>\n"
                         )}
-                        )
-                    });
+                        
+                    }
+                });
 
                 }
 
-            }
+            
 
         });
 
 
-    });
-
-});
 
 // Handling Delete Request - - - - - - - - - - - - - - - - - - - -
 
-app.delete('/event/:eventId', function(req,res){
+app.delete('/patient/:patientId', function(req,res){
 
-    Event.findOneAndRemove({eventId: req.params['eventId']}, function(err, deleted){
+    Patient.findOneAndRemove({patientId: req.params['patientId']}, function(err, deleted){
 
         if(err)
             return res.status(500).send(err);
         console.log(deleted);
 
         if(!deleted)
-            res.status(500).send("Event not found");
+            res.status(500).send("Patient not found");
         // deleted contains the data
 
         else
-        {Location.findById(deleted.loc, function(err, location ){
+        {{
 
 
 
-            res.send("Succesfully deleted Event:" + "<br>\n" +
-            "Event name: " + deleted.name + "<br>\n" +
-            "Location ID: "+ location.locId + "<br>\n" +
-            "Location Name: "+ location.name + "<br>\n" +
-            "Event Quota: " + deleted.quota + "<br>\n"
+            res.send("Succesfully deleted entry:" + "<br>\n" +
+            "Patient ID: " + deleted.patientId + "<br>\n" +
+            "Patient name: "+ deleted.name + "<br>\n" 
+           
 
             ) // end of res.send
 
-        });}
+        };}
 
     });
 
@@ -171,23 +143,23 @@ app.delete('/event/:eventId', function(req,res){
 
 // GET REQUEST, listing all events available - - - - - - - - - - - - - - - - - - - -
 
-app.get('/event', function(req,res) {
+app.get('/patient', function(req,res) {
 
-    Event.find({})
-    .populate('loc')
+    Patient.find({})
     .exec(function(err, events){
-        if(events.length<1 ){
+        if(patients.length<1 ){
             // If there are no events listed
-            res.send("We can't find any event stored in the database");
+            res.send("Cannot find any entry stored in database");
         }
         else
         {var buffer = "" // buffer of empty string
-        for(let event of events){
+        for(let patient of patients){
             buffer = buffer +
-            "Event Name: " + event.name + "<br>\n" +
-            "Location ID: " + event.loc.locId + "<br>\n" +
-            "Location Name: " + event.loc.name + "<br>\n" +
-            "Event Quota :" + event.quota + "<br>\n"
+            "Patient ID: " + patient.patientId + "<br>\n" +
+            "Patient name: " + patient.name + "<br>\n" +
+            "Age: " + patient.age + "<br>\n" +
+            "Amount of sports required :" + patient.reqsport + "<br>\n" + 
+            "Amount of sports completed :" + patient.finsport + "<br>\n" 
             +"------------------------------------------"+ "<br>\n";
         }
         res.send(buffer);}
@@ -195,61 +167,7 @@ app.get('/event', function(req,res) {
 
 }) // end of get req
 
-
-// GET REQUEST for /localhost:3000/loc with or without query (? .. ) - - - - - - - - - - - - - - - -
-app.get('/loc', function(req,res) {
-
-    if(Object.keys(req.query).length == 0)  // If you Query nothing then list out everything
-        {
-        Location.find({})
-        .exec(function(err,locations){
-            if(!locations)
-                res.send("You Have Not allocated any event");
-            var buffer = ""; // Empty string
-            for(let location of locations){
-                buffer = buffer +
-                "Location ID: " + location.locId + "<br>\n" +
-                "Location Name: "+ location.name +"<br>\n" +
-                "Location Quota: "+ location.quota + "<br>\n"+
-                "---------------------------------------" + "<br>\n";
-            }
-        res.send(buffer);
-    });
-        }       // end of if condition on 0 query
-
-    else{
-        //if you have query ?quota -> find locations that have >= minimum
-        var minimum = req.query.quota;
-
-        Location
-        .find({
-            quota: { $gte: minimum}
-        })
-        .exec(function(err, locations) {
-
-            if(locations.length < 1)
-                res.send("No such location with quota of at least " + minimum + " found in database");
-            else {
-                var buffer = ""; // Empty string
-            for(let location of locations){
-                buffer = buffer +
-                "Location ID: " + location.locId + "<br>\n" +
-                "Location Name: "+ location.name +"<br>\n" +
-                "Location Quota: "+ location.quota + "<br>\n"+
-                "---------------------------------------" + "<br>\n";
-            }
-                res.send(buffer);
-            } // end else
-        })
-
-
-    }
-
-
-
-}); // end of event handler
-
-
 // GET http://server address/loc/location ID - - - - - - - - - - - - - - - - - -
 
 var server = app.listen(3000);
+});
