@@ -1,3 +1,4 @@
+
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
@@ -22,6 +23,9 @@ db.once('open', function(){
 });
 
 // Creating Schema Needed - - - - - - - - - - - - - - - - - - - - - -
+
+
+
 
 var PatientSchema = mongoose.Schema({
     patientId: {type: Number, required: true, unique: true},
