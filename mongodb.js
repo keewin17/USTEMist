@@ -3,6 +3,8 @@ var app = express();
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.urlencoded({extended: false});
 var mongoose = require('mongoose');
+var mongoDB = 'mongodb+srv://user:1234@cluster0-357al.mongodb.net/test?retryWrites=true';
+mongoose.connect(mongoDB, { useNewUrlParser: true });
 
 app.use(urlencodedParser);
 // Setting Up Connection - - - - - - - - - - - - - - - - - - - - - -
@@ -12,7 +14,7 @@ var db = mongoose.connection;
 
 // Handling Connections - - - - - - - - - - - - - - - - - - - - - -
 db.on('error', console.error.bind(console,
-    'Connection error:'));
+    'Cvnection error:'));
 
 db.once('open', function(){
     console.log("Connection is open...");
