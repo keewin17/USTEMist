@@ -5,6 +5,7 @@ var urlencodedParser = bodyParser.urlencoded({extended: false});
 var mongoose = require('mongoose');
 var mongoDB = 'mongodb+srv://user:1234@cluster0-357al.mongodb.net/test?retryWrites=true';
 mongoose.connect(mongoDB, { useNewUrlParser: true });
+mongoose.set('useCreateIndex', true)
 
 app.use(urlencodedParser);
 // Setting Up Connection - - - - - - - - - - - - - - - - - - - - - -
