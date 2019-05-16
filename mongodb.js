@@ -1,12 +1,17 @@
 
+
+
+
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
+
 var urlencodedParser = bodyParser.urlencoded({extended: false});
 var mongoose = require('mongoose');
 var mongoDB = 'mongodb+srv://user:1234@cluster0-357al.mongodb.net/test?retryWrites=true';
 mongoose.connect(mongoDB, { useNewUrlParser: true });
-mongoose.set('useCreateIndex', true)
+mongoose.set('useCreateIndex', true);
+
 
 app.use(urlencodedParser);
 // Setting Up Connection - - - - - - - - - - - - - - - - - - - - - -
@@ -16,10 +21,10 @@ var db = mongoose.connection;
 
 // Handling Connections - - - - - - - - - - - - - - - - - - - - - -
 db.on('error', console.error.bind(console,
-    'Cvnection error:'));
+    'Connection error:'));
 
 db.once('open', function(){
-    console.log("Connection is open...");
+    console.log('Connection is open...');
 });
 
 // Creating Schema Needed - - - - - - - - - - - - - - - - - - - - - -
@@ -27,15 +32,15 @@ db.once('open', function(){
 
 
 
-var PatientSchema = mongoose.Schema({
-    patientId: {type: Number, required: true, unique: true},
+var SubjectSchema = mongoose.Schema({
+    subjectId: {type: Number, required: true, unique: true},
     name: {type: String, required: true},
     age: {type: Number},
     reqsport: {type: Number},
     finsport: {type: Number}
 });
 
-var Patient = mongoose.model('Patient', PatientSchema);
+var Subject = mongoose.model('Subject', SubjectSchema);
 
 // Handling Requests - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -44,9 +49,9 @@ app.get('/',function(req,res){
 })
 
 //
-app.get('/patient/:patientId',function(req,res) {
+app.get('/subject/:sid',function(req,res) {
     Patient.findOne(
-        {patientId: req.params.patientId},'patientId name age reqsport finsport',
+        {sid: req.params.sid},'patientId name age reqsport finsport',
         function(err, e) {
             if(err)
                 res.send(err);
@@ -55,11 +60,11 @@ app.get('/patient/:patientId',function(req,res) {
             else
             
             {res.send(
-            "Patient ID: " + e.patientId + "<br>\n" +
+            "Patient ID: " + e.sid + "<br>\n" +
             "Patient name: " + e.name + "<br>\n" +
             "Age: "+ e.age + "<br>\n" +
-            "Amount of sports required: "+ e.reqsport + "<br>\n" +
-            "Amount of sports completed: " + e.finsport + "<br>\n")}
+            "Amount of sports required: "+ e.rs + "<br>\n" +
+            "Amount of sports completed: " + e.sd + "<br>\n")}
 
             
         }
@@ -68,26 +73,26 @@ app.get('/patient/:patientId',function(req,res) {
 
 
 // need to build restful API to handle all things
-app.post('/patient', function(req,res){
+app.post('/subject', function(req,res){
     // Event -> eventId(number),name(string),loc(obj type),quota(number)
     // Find whether there are any events, if no events-> eventid = 0 , or else eventid = max+1
 
     // find all
-    Patient.find( {} , 'patientId -_id', function(err, patients){
+    Patient.find( {} , 'sid -_id', function(err, patients){
         if(err) return next(err);
 
-        var patientid = 0
-        if(patients.length < 1) { // if length 0, contains nothing
-            patientid = 0;
+        var sid = 0
+        if(sid.length < 1) { // if length 0, contains nothing
+            sid = 0;
         }
         else {
              // if not, then you can create event and save it(store it to database)
-            var e = new Patient({
-                patientId: req.body['patientid'],
+            var e = new subject({
+                subjectId: req.body['sid'],
                 name: req.body['name'],
                 age: req.body['age'],
-                reqsport: req.body['reqsport'],
-                finsport: req.body['finsport']
+                reqsport: req.body['rs'],
+                finsport: req.body['sd']
             });
 
                 e.save(function(err){
@@ -97,11 +102,11 @@ app.post('/patient', function(req,res){
                     else{
                       
                         {res.status(201).send("Succesfully input patient:"+"<br>\n" +
-                            "Patient ID: " + e.patientId+ "<br>\n" +
+                            "Patient ID: " + e.sid+ "<br>\n" +
                             "Patient Name: " + e.name + "<br>\n" +
                             "Age: " + e.age + "<br>\n" +
-                            "Amount of sports required: " + e.reqsport + "<br>\n" +
-                            "Amount of sports completed: " + e.finsport +"<br>\n"
+                            "Amount of sports required: " + e.rs + "<br>\n" +
+                            "Amount of sports completed: " + e.sd +"<br>\n"
                         )}
                         
                     }
@@ -117,16 +122,16 @@ app.post('/patient', function(req,res){
 
 // Handling Delete Request - - - - - - - - - - - - - - - - - - - -
 
-app.delete('/patient/:patientId', function(req,res){
+app.delete('/subject/:sid', function(req,res){
 
-    Patient.findOneAndRemove({patientId: req.params['patientId']}, function(err, deleted){
+    Patient.findOneAndRemove({sid: req.params['sid']}, function(err, deleted){
 
         if(err)
             return res.status(500).send(err);
         console.log(deleted);
 
         if(!deleted)
-            res.status(500).send("Patient not found");
+            res.status(500).send("Subject not found");
         // deleted contains the data
 
         else
@@ -135,8 +140,8 @@ app.delete('/patient/:patientId', function(req,res){
 
 
             res.send("Succesfully deleted entry:" + "<br>\n" +
-            "Patient ID: " + deleted.patientId + "<br>\n" +
-            "Patient name: "+ deleted.name + "<br>\n" 
+            "Subject ID: " + deleted.sid + "<br>\n" +
+            "Subject name: "+ deleted.name + "<br>\n" 
            
 
             ) // end of res.send
@@ -150,23 +155,23 @@ app.delete('/patient/:patientId', function(req,res){
 
 // GET REQUEST, listing all events available - - - - - - - - - - - - - - - - - - - -
 
-app.get('/patient', function(req,res) {
+app.get('/subject', function(req,res) {
 
-    Patient.find({})
+    Subject.find({})
     .exec(function(err, events){
-        if(patients.length<1 ){
+        if(subject.length < 1 ){
             // If there are no events listed
             res.send("Cannot find any entry stored in database");
         }
         else
         {var buffer = "" // buffer of empty string
-        for(let patient of patients){
+        for(let subject of subjects){
             buffer = buffer +
-            "Patient ID: " + patient.patientId + "<br>\n" +
-            "Patient name: " + patient.name + "<br>\n" +
-            "Age: " + patient.age + "<br>\n" +
-            "Amount of sports required :" + patient.reqsport + "<br>\n" + 
-            "Amount of sports completed :" + patient.finsport + "<br>\n" 
+            "Subject ID: " + subject.sid + "<br>\n" +
+            "Subject name: " + subject.name + "<br>\n" +
+            "Age: " + subject.age + "<br>\n" +
+            "Amount of sports required :" + subject.rq + "<br>\n" + 
+            "Amount of sports completed :" + subject.sd + "<br>\n" 
             +"------------------------------------------"+ "<br>\n";
         }
         res.send(buffer);}
@@ -178,3 +183,4 @@ app.get('/patient', function(req,res) {
 
 var server = app.listen(3000);
 });
+
